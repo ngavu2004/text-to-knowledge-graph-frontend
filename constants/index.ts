@@ -8,6 +8,7 @@ import {
 	Mail,
 	MessageCircle,
 } from 'lucide-react';
+import { MindMapData } from '@/types/mindmap';
 
 export const floatingElements = [
 	{ id: 1, x: '10%', y: '15%', delay: 0, icon: '🧠' },
@@ -85,3 +86,59 @@ export const socialButtons = [
 		color: 'bg-green-500 hover:bg-green-600',
 	},
 ];
+
+export const sampleData: MindMapData = {
+	nodes: [
+		{ id: 'FTP', type: 'Protocol', properties: {} },
+		{ id: 'Control Channel', type: 'Channel', properties: {} },
+		{ id: 'Data Channel', type: 'Channel', properties: {} },
+		{ id: 'Port 21', type: 'Port', properties: {} },
+		{ id: 'Port Range 20-21', type: 'Port', properties: {} },
+		{ id: 'Authentication', type: 'Service', properties: {} },
+		{ id: 'File Transfer', type: 'Service', properties: {} },
+	],
+	relationships: [
+		{ source: 'FTP', target: 'Control Channel', type: 'USES', properties: {} },
+		{ source: 'FTP', target: 'Data Channel', type: 'USES', properties: {} },
+		{
+			source: 'Control Channel',
+			target: 'Port 21',
+			type: 'OPERATES_ON',
+			properties: {},
+		},
+		{
+			source: 'Data Channel',
+			target: 'Port Range 20-21',
+			type: 'OPERATES_ON',
+			properties: {},
+		},
+		{
+			source: 'FTP',
+			target: 'Authentication',
+			type: 'DEPENDS_ON',
+			properties: {},
+		},
+		{ source: 'FTP', target: 'File Transfer', type: 'USES', properties: {} },
+	],
+	chunks_processed: 237,
+};
+
+// Color mapping for different node types
+export const NODE_COLORS: Record<string, string> = {
+	Protocol: '#8b5cf6', // Purple
+	Channel: '#3b82f6', // Blue
+	Port: '#10b981', // Green
+	Service: '#f59e0b', // Yellow
+	Database: '#ef4444', // Red
+	API: '#ec4899', // Pink
+	default: '#6b7280', // Gray
+};
+
+// Relationship type colors
+export const RELATIONSHIP_COLORS: Record<string, string> = {
+	USES: '#3b82f6',
+	OPERATES_ON: '#10b981',
+	CONNECTS_TO: '#f59e0b',
+	DEPENDS_ON: '#ef4444',
+	default: '#6b7280',
+};
