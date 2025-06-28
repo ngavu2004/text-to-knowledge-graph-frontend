@@ -35,7 +35,7 @@ export const UploadContent: React.FC<UploadContentProps> = ({
 				<div
 					className={`w-24 h-24 mx-auto rounded-full flex items-center justify-center transition-all duration-300 ${
 						isDragOver
-							? 'bg-gradient-to-r from-purple-500 to-pink-500 shadow-lg'
+							? 'bg-gradient-to-r from-emerald-500 to-green-600 shadow-lg'
 							: 'bg-gray-100'
 					}`}
 				>
@@ -58,7 +58,7 @@ export const UploadContent: React.FC<UploadContentProps> = ({
 				<Button
 					onClick={onBrowseClick}
 					size="lg"
-					className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white px-12 py-4 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 cursor-pointer"
+					className="bg-gradient-to-r from-emerald-600 to-green-700 hover:from-emerald-700 hover:to-green-800 text-white px-12 py-4 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 cursor-pointer"
 				>
 					Browse Files
 				</Button>

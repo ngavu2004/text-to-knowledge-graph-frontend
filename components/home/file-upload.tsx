@@ -26,7 +26,8 @@ interface FileUploadCardProps {
 	onBrowseClick: () => void;
 	onRemoveFile: () => void;
 	onGenerateMindMap: () => void;
-	fileInputRef: React.RefObject<HTMLInputElement>;
+	// Fix: Accept the correct ref type that matches useRef<HTMLInputElement>(null)
+	fileInputRef: React.RefObject<HTMLInputElement | null>;
 }
 
 export const FileUploadCard: React.FC<FileUploadCardProps> = ({
@@ -50,12 +51,12 @@ export const FileUploadCard: React.FC<FileUploadCardProps> = ({
 }) => {
 	return (
 		<motion.div {...animations.stagger}>
-			<Card className="overflow-hidden shadow-xl border-2 border-dashed border-gray-200 hover:border-purple-300 transition-colors duration-300">
+			<Card className="overflow-hidden shadow-xl border-2 border-dashed border-gray-200 hover:border-emerald-300 transition-colors duration-300">
 				<CardContent className="p-0">
 					<div
 						className={`relative p-12 text-center transition-colors duration-300 ${
 							isDragOver
-								? 'bg-gradient-to-br from-purple-50 to-pink-50'
+								? 'bg-gradient-to-br from-emerald-50 to-green-50'
 								: 'bg-gradient-to-br from-gray-50 to-white'
 						}`}
 						onDragOver={onDragOver}

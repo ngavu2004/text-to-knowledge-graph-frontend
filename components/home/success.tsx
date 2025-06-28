@@ -61,7 +61,7 @@ export const SuccessContent: React.FC<SuccessContentProps> = ({
 				<Button
 					onClick={onGenerateMindMap}
 					size="lg"
-					className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white px-12 py-4 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 cursor-pointer"
+					className="bg-gradient-to-r from-emerald-600 to-green-700 hover:from-emerald-700 hover:to-green-800 text-white px-12 py-4 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 cursor-pointer"
 				>
 					<Brain className="w-6 h-6 mr-3" />
 					Generate Mind Map

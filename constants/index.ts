@@ -10,6 +10,33 @@ import {
 } from 'lucide-react';
 import { MindMapData } from '@/types/mindmap';
 
+// Color Palette - Consistent green theme across all pages
+export const colors = {
+	primary: {
+		50: '#D8F3DC', // Lightest green
+		100: '#B7E4C7', // Very light green
+		200: '#95D5B2', // Light green
+		300: '#74C69D', // Medium light green
+		400: '#52B788', // Medium green
+		500: '#40916C', // Main green
+		600: '#2D6A4F', // Dark green
+		700: '#1B4332', // Very dark green
+		800: '#081C15', // Darkest green
+	},
+	gradients: {
+		primary: 'from-emerald-400 to-green-600',
+		secondary: 'from-green-500 to-emerald-700',
+		light: 'from-emerald-50 to-green-100',
+		background: 'from-emerald-50 via-green-50 to-teal-100',
+	},
+	semantic: {
+		success: '#52B788',
+		warning: '#74C69D',
+		error: '#dc2626',
+		info: '#40916C',
+	},
+};
+
 export const floatingElements = [
 	{ id: 1, x: '10%', y: '15%', delay: 0, icon: '🧠' },
 	{ id: 2, x: '85%', y: '25%', delay: 0.5, icon: '💡' },
@@ -59,19 +86,19 @@ export const socialButtons = [
 		icon: Twitter,
 		label: 'Twitter',
 		platform: 'twitter',
-		color: 'bg-blue-400 hover:bg-blue-500',
+		color: 'bg-emerald-400 hover:bg-emerald-500',
 	},
 	{
 		icon: Facebook,
 		label: 'Facebook',
 		platform: 'facebook',
-		color: 'bg-blue-600 hover:bg-blue-700',
+		color: 'bg-emerald-600 hover:bg-emerald-700',
 	},
 	{
 		icon: Linkedin,
 		label: 'LinkedIn',
 		platform: 'linkedin',
-		color: 'bg-blue-700 hover:bg-blue-800',
+		color: 'bg-green-700 hover:bg-green-800',
 	},
 	{
 		icon: Mail,
@@ -123,22 +150,22 @@ export const sampleData: MindMapData = {
 	chunks_processed: 237,
 };
 
-// Color mapping for different node types
+// Color mapping for different node types using green palette
 export const NODE_COLORS: Record<string, string> = {
-	Protocol: '#8b5cf6', // Purple
-	Channel: '#3b82f6', // Blue
-	Port: '#10b981', // Green
-	Service: '#f59e0b', // Yellow
-	Database: '#ef4444', // Red
-	API: '#ec4899', // Pink
-	default: '#6b7280', // Gray
+	Protocol: '#52B788', // Medium green
+	Channel: '#40916C', // Main green
+	Port: '#74C69D', // Medium light green
+	Service: '#2D6A4F', // Dark green
+	Database: '#1B4332', // Very dark green
+	API: '#95D5B2', // Light green
+	default: '#52B788', // Medium green
 };
 
-// Relationship type colors
+// Relationship type colors using green palette
 export const RELATIONSHIP_COLORS: Record<string, string> = {
-	USES: '#3b82f6',
-	OPERATES_ON: '#10b981',
-	CONNECTS_TO: '#f59e0b',
-	DEPENDS_ON: '#ef4444',
-	default: '#6b7280',
+	USES: '#40916C', // Main green
+	OPERATES_ON: '#74C69D', // Medium light green
+	CONNECTS_TO: '#52B788', // Medium green
+	DEPENDS_ON: '#2D6A4F', // Dark green
+	default: '#52B788', // Medium green
 };

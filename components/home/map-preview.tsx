@@ -8,19 +8,40 @@ import { ArrowLeft, Share2, Download, Edit, ExternalLink } from 'lucide-react';
 import { GeneratedMindMap, MindMapData } from '../../types/mindmap';
 import { MindMap } from './mindmap/mindmap';
 import { sampleData } from '@/constants';
+import { useRouter } from 'next/navigation';
 
 interface MindMapPreviewProps {
 	generatedMindMap: GeneratedMindMap;
-	mindMapData?: MindMapData;
+	mindMapData: MindMapData | null;
 	onStartOver: () => void;
 	onShare: () => void;
 }
 
 export const MindMapPreview: React.FC<MindMapPreviewProps> = ({
 	generatedMindMap,
+	mindMapData,
 	onStartOver,
 	onShare,
 }) => {
+	const router = useRouter();
+
+	const handleOpenGraph = () => {
+		// Save mind map data to localStorage before navigating
+		if (mindMapData) {
+			const storageKey = `mindmap_${generatedMindMap.id}`;
+			const dataToStore = {
+				mindMapData,
+				title: generatedMindMap.title,
+				createdAt: generatedMindMap.createdAt.toISOString(),
+				views: 0,
+				isPublic: false,
+			};
+			localStorage.setItem(storageKey, JSON.stringify(dataToStore));
+		}
+
+		router.push(`/graph/${generatedMindMap.id}`);
+	};
+
 	return (
 		<motion.div
 			initial={{ opacity: 0, y: 30 }}
@@ -30,16 +51,16 @@ export const MindMapPreview: React.FC<MindMapPreviewProps> = ({
 		>
 			<Card className="shadow-2xl overflow-hidden">
 				<CardContent className="p-0">
-					<div className="bg-gradient-to-r from-purple-600 to-pink-600 p-6 text-white">
+					<div className="bg-gradient-to-r from-emerald-600 to-green-700 p-6 text-white">
 						<div className="flex items-center justify-between">
 							<div>
 								<h2 className="text-2xl font-bold mb-2">
 									Your Mind Map is Ready!
 								</h2>
-								<p className="text-purple-100">
+								<p className="text-emerald-100">
 									{generatedMindMap.title} • Created{' '}
 									{generatedMindMap.createdAt.toLocaleTimeString()} •{' '}
-									{sampleData.chunks_processed} chunks processed
+									{mindMapData?.chunks_processed} chunks processed
 								</p>
 							</div>
 							<Button
@@ -56,7 +77,7 @@ export const MindMapPreview: React.FC<MindMapPreviewProps> = ({
 					<div className="p-8">
 						<div className="mb-8">
 							<MindMap
-								data={sampleData}
+								data={mindMapData || sampleData}
 								width={800}
 								height={500}
 								className="w-full"
@@ -67,7 +88,7 @@ export const MindMapPreview: React.FC<MindMapPreviewProps> = ({
 						<div className="grid grid-cols-1 md:grid-cols-4 gap-4">
 							<Button
 								onClick={onShare}
-								className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white"
+								className="bg-gradient-to-r from-emerald-600 to-green-700 hover:from-emerald-700 hover:to-green-800 text-white"
 							>
 								<Share2 className="w-4 h-4 mr-2" />
 								Share
@@ -80,10 +101,7 @@ export const MindMapPreview: React.FC<MindMapPreviewProps> = ({
 								<Edit className="w-4 h-4 mr-2" />
 								Edit
 							</Button>
-							<Button
-								variant="outline"
-								onClick={() => window.open(generatedMindMap.shareUrl, '_blank')}
-							>
+							<Button variant="outline" onClick={handleOpenGraph}>
 								<ExternalLink className="w-4 h-4 mr-2" />
 								Open
 							</Button>

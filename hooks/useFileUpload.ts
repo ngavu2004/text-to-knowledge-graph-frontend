@@ -1,14 +1,20 @@
 'use client';
 
 import { useState, useRef, useCallback, useMemo } from 'react';
-import { FileUploadState } from '../types/mindmap';
+import { FileUploadState, MindMapData } from '../types/mindmap';
+import { mindmapApi } from '../lib/api/llm';
+
+interface ExtendedFileUploadState extends FileUploadState {
+	mindMapData: MindMapData | null;
+}
 
 export const useFileUpload = () => {
-	const [state, setState] = useState<FileUploadState>({
+	const [state, setState] = useState<ExtendedFileUploadState>({
 		isDragOver: false,
 		uploadedFile: null,
 		isProcessing: false,
 		error: null,
+		mindMapData: null,
 	});
 
 	const fileInputRef = useRef<HTMLInputElement>(null);
@@ -55,6 +61,7 @@ export const useFileUpload = () => {
 		[maxSizeBytes, maxSizeInMB, acceptedFileTypes, supportedTypesDisplay]
 	);
 
+	// Actually call the backend API
 	const processFile = useCallback(
 		async (file: File) => {
 			const validationError = validateFile(file);
@@ -68,12 +75,29 @@ export const useFileUpload = () => {
 				error: null,
 				isProcessing: true,
 				uploadedFile: file,
+				mindMapData: null,
 			}));
 
-			// Simulate file processing
-			await new Promise(resolve => setTimeout(resolve, 1500));
+			try {
+				const mindMapData = await mindmapApi.uploadAndProcessFile(file);
 
-			setState(prev => ({ ...prev, isProcessing: false }));
+				setState(prev => ({
+					...prev,
+					isProcessing: false,
+					mindMapData,
+				}));
+			} catch (error) {
+				console.error('Upload and processing failed:', error);
+				const errorMessage =
+					error instanceof Error ? error.message : 'Upload failed';
+				setState(prev => ({
+					...prev,
+					isProcessing: false,
+					error: errorMessage,
+					uploadedFile: null,
+					mindMapData: null,
+				}));
+			}
 		},
 		[validateFile]
 	);
@@ -117,6 +141,7 @@ export const useFileUpload = () => {
 			uploadedFile: null,
 			isProcessing: false,
 			error: null,
+			mindMapData: null,
 		});
 		if (fileInputRef.current) {
 			fileInputRef.current.value = '';
@@ -129,6 +154,7 @@ export const useFileUpload = () => {
 			uploadedFile: null,
 			isProcessing: false,
 			error: null,
+			mindMapData: null,
 		});
 		if (fileInputRef.current) {
 			fileInputRef.current.value = '';
