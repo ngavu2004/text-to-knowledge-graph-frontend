@@ -14,7 +14,7 @@ export const ProcessingContent: React.FC = () => {
 		>
 			<div className="w-24 h-24 mx-auto">
 				<motion.div
-					className="w-full h-full rounded-full bg-gradient-to-r from-purple-500 to-pink-500 flex items-center justify-center"
+					className="w-full h-full rounded-full bg-gradient-to-r from-emerald-500 to-green-600 flex items-center justify-center"
 					animate={{ rotate: 360 }}
 					transition={{ duration: 2, repeat: Infinity, ease: 'linear' }}
 				>

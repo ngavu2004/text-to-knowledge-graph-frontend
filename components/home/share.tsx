@@ -4,12 +4,14 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Share2, X, Copy, Check, ExternalLink } from 'lucide-react';
-import { GeneratedMindMap } from '../../types/mindmap';
+import { GeneratedMindMap, MindMapData } from '../../types/mindmap';
+import { useRouter } from 'next/navigation';
 // import { socialButtons } from '@/constants';
 
 interface ShareModalProps {
 	isOpen: boolean;
 	generatedMindMap: GeneratedMindMap;
+	mindMapData: MindMapData | null;
 	shortUrl: string | null;
 	isCopied: boolean;
 	onClose: () => void;
@@ -20,12 +22,32 @@ interface ShareModalProps {
 export const ShareModal: React.FC<ShareModalProps> = ({
 	isOpen,
 	generatedMindMap,
+	mindMapData,
 	shortUrl,
 	isCopied,
 	onClose,
 	onCopyLink,
 	// onSocialShare,
 }) => {
+	const router = useRouter();
+
+	const handleOpenGraph = () => {
+		// Save mind map data to localStorage before navigating
+		if (mindMapData) {
+			const storageKey = `mindmap_${generatedMindMap.id}`;
+			const dataToStore = {
+				mindMapData,
+				title: generatedMindMap.title,
+				createdAt: generatedMindMap.createdAt.toISOString(),
+				views: 0,
+				isPublic: false,
+			};
+			localStorage.setItem(storageKey, JSON.stringify(dataToStore));
+		}
+
+		router.push(`/graph/${generatedMindMap.id}`);
+	};
+
 	return (
 		<AnimatePresence>
 			{isOpen && (
@@ -47,7 +69,7 @@ export const ShareModal: React.FC<ShareModalProps> = ({
 							<Card className="shadow-2xl border-0 overflow-hidden">
 								<CardContent className="p-0">
 									{/* Header */}
-									<div className="bg-gradient-to-r from-purple-600 to-pink-600 p-6 text-white">
+									<div className="bg-gradient-to-r from-emerald-600 to-green-700 p-6 text-white">
 										<div className="flex items-center justify-between">
 											<div className="flex items-center space-x-3">
 												<div className="w-10 h-10 bg-white/20 rounded-lg flex items-center justify-center">
@@ -57,7 +79,7 @@ export const ShareModal: React.FC<ShareModalProps> = ({
 													<h2 className="text-xl font-bold">
 														Share Your Mind Map
 													</h2>
-													<p className="text-purple-100 text-sm">
+													<p className="text-emerald-100 text-sm">
 														Copy this link to share your mind map with others.
 													</p>
 												</div>
@@ -85,7 +107,7 @@ export const ShareModal: React.FC<ShareModalProps> = ({
 													type="text"
 													value={shortUrl || generatedMindMap.shareUrl}
 													readOnly
-													className="flex-1 px-4 py-3 bg-gray-50 border border-gray-200 rounded-lg text-sm font-mono focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+													className="flex-1 px-4 py-3 bg-gray-50 border border-gray-200 rounded-lg text-sm font-mono focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
 													onClick={e => e.currentTarget.select()}
 												/>
 												<Button
@@ -93,7 +115,7 @@ export const ShareModal: React.FC<ShareModalProps> = ({
 													className={`px-4 py-3 transition-all duration-200 ${
 														isCopied
 															? 'bg-green-600 hover:bg-green-700'
-															: 'bg-purple-600 hover:bg-purple-700'
+															: 'bg-emerald-600 hover:bg-emerald-700'
 													} cursor-pointer`}
 												>
 													<motion.div
@@ -161,10 +183,8 @@ export const ShareModal: React.FC<ShareModalProps> = ({
 												Done
 											</Button>
 											<Button
-												onClick={() =>
-													window.open(generatedMindMap.shareUrl, '_blank')
-												}
-												className="flex-1 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 cursor-pointer"
+												onClick={handleOpenGraph}
+												className="flex-1 bg-gradient-to-r from-emerald-600 to-green-700 hover:from-emerald-700 hover:to-green-800 cursor-pointer"
 											>
 												<ExternalLink className="w-4 h-4 mr-2" />
 												Open

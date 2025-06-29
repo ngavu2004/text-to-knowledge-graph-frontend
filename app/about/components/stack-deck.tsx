@@ -74,7 +74,7 @@ const FeatureCards = () => {
 							<Card
 								className={`w-full h-full p-6 border-0 shadow-lg transition-all duration-500 cursor-pointer ${
 									isActive
-										? 'ring-2 ring-blue-400 bg-blue-50 shadow-2xl'
+										? 'ring-2 ring-emerald-400 bg-emerald-50 shadow-2xl'
 										: 'bg-white hover:shadow-xl'
 								}`}
 								onClick={() => setCurrentFeature(index)}
@@ -83,7 +83,7 @@ const FeatureCards = () => {
 									<div
 										className={`w-12 h-12 rounded-lg flex items-center justify-center mb-4 mx-auto transition-all duration-300 ${
 											isActive
-												? 'bg-blue-600 text-white'
+												? 'bg-emerald-600 text-white'
 												: 'bg-gray-100 text-gray-600'
 										}`}
 									>
@@ -107,7 +107,7 @@ const FeatureCards = () => {
 							key={index}
 							className={`w-2 h-2 rounded-full transition-all duration-300 ${
 								currentFeature === index
-									? 'bg-blue-600 w-6'
+									? 'bg-emerald-600 w-6'
 									: 'bg-gray-300 hover:bg-gray-400'
 							}`}
 							onClick={() => setCurrentFeature(index)}

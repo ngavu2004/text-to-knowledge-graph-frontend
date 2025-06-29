@@ -3,6 +3,7 @@ import React from 'react';
 import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { Lightbulb, ArrowRight } from 'lucide-react';
+import { AuroraText } from '@/components/magicui/aurora-text';
 import Link from 'next/link';
 
 const HeroSection = () => {
@@ -14,7 +15,7 @@ const HeroSection = () => {
 				transition={{ duration: 0.6, delay: 0.2 }}
 				className="mb-6"
 			>
-				<div className="inline-flex items-center px-4 py-2 bg-blue-100 rounded-full text-blue-700 text-sm font-medium mb-8">
+				<div className="inline-flex items-center px-4 py-2 bg-emerald-100 rounded-full text-emerald-700 text-sm font-medium mb-8">
 					<Lightbulb className="w-4 h-4 mr-2" />
 					Say Goodbye to Doom Scrolling
 				</div>
@@ -26,11 +27,12 @@ const HeroSection = () => {
 				animate={{ opacity: 1, y: 0 }}
 				transition={{ duration: 0.8, delay: 0.3 }}
 			>
-				<span className="bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
-					MIND PAPER
-				</span>
+				Ship <AuroraText>beautiful</AuroraText>
 				<br />
-				<span className="text-gray-900">MIND GRAPH</span>
+				<span className="text-gray-900">
+					{' '}
+					<AuroraText>MIND GRAPH</AuroraText>
+				</span>
 			</motion.h1>
 
 			<motion.p
@@ -40,7 +42,7 @@ const HeroSection = () => {
 				transition={{ duration: 0.6, delay: 0.5 }}
 			>
 				Transform documents into productive learning with our{' '}
-				<span className="text-blue-600 font-bold">
+				<span className="text-emerald-600 font-bold">
 					AI-powered mind-map platform.
 				</span>
 			</motion.p>
@@ -54,7 +56,7 @@ const HeroSection = () => {
 					{' '}
 					<Button
 						size="lg"
-						className="bg-blue-600 hover:bg-blue-700 text-lg px-8 py-6 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 cursor-pointer"
+						className="bg-emerald-600 hover:bg-emerald-700 text-lg px-8 py-6 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 cursor-pointer"
 					>
 						Access Mind Paper
 						<ArrowRight className="w-5 h-5 ml-2" />

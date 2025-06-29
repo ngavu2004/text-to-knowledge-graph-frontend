@@ -92,10 +92,10 @@ const Navbar = () => {
 					transition={{ type: 'spring', stiffness: 400 }}
 				>
 					<motion.div
-						className="w-10 h-10 bg-gradient-to-r from-purple-500 to-pink-500 rounded-lg flex items-center justify-center shadow-md"
+						className="w-10 h-10 bg-gradient-to-r from-emerald-500 to-green-600 rounded-lg flex items-center justify-center shadow-md"
 						whileHover={{
 							rotate: 5,
-							boxShadow: '0 8px 25px rgba(59, 130, 246, 0.3)',
+							boxShadow: '0 8px 25px rgba(52, 183, 136, 0.3)',
 						}}
 						transition={{ type: 'spring', stiffness: 400 }}
 					>
@@ -113,13 +113,13 @@ const Navbar = () => {
 				<nav className="hidden md:flex items-center space-x-8">
 					<Link href="/about">
 						<motion.button
-							className="text-gray-700 hover:text-blue-600 transition-colors font-medium relative cursor-pointer"
+							className="text-gray-700 hover:text-emerald-600 transition-colors font-medium relative cursor-pointer"
 							whileHover={{ y: -2 }}
 							transition={{ type: 'spring', stiffness: 400 }}
 						>
 							About
 							<motion.div
-								className="absolute -bottom-1 left-0 w-0 h-0.5 bg-blue-600"
+								className="absolute -bottom-1 left-0 w-0 h-0.5 bg-emerald-600"
 								whileHover={{ width: '100%' }}
 								transition={{ duration: 0.3 }}
 							/>
@@ -127,13 +127,13 @@ const Navbar = () => {
 					</Link>
 					<Link href="/policy">
 						<motion.button
-							className="text-gray-700 hover:text-blue-600 transition-colors font-medium relative cursor-pointer"
+							className="text-gray-700 hover:text-emerald-600 transition-colors font-medium relative cursor-pointer"
 							whileHover={{ y: -2 }}
 							transition={{ type: 'spring', stiffness: 400 }}
 						>
 							Policy
 							<motion.div
-								className="absolute -bottom-1 left-0 w-0 h-0.5 bg-blue-600"
+								className="absolute -bottom-1 left-0 w-0 h-0.5 bg-emerald-600"
 								whileHover={{ width: '100%' }}
 								transition={{ duration: 0.3 }}
 							/>
@@ -141,7 +141,7 @@ const Navbar = () => {
 					</Link>
 					<Link href="/">
 						<motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
-							<Button className="bg-gradient-to-r from-purple-500 to-pink-500 hover:bg-blue-700 shadow-lg hover:shadow-xl transition-all duration-300 cursor-pointer">
+							<Button className="bg-gradient-to-r from-emerald-500 to-green-600 hover:from-emerald-600 hover:to-green-700 shadow-lg hover:shadow-xl transition-all duration-300 cursor-pointer">
 								Get Started
 								<motion.div
 									animate={{ x: [0, 4, 0] }}
@@ -212,7 +212,7 @@ const Navbar = () => {
 									initial="closed"
 									animate="open"
 								>
-									<div className="w-12 h-12 bg-gradient-to-r from-purple-500 to-pink-500 rounded-xl flex items-center justify-center shadow-lg">
+									<div className="w-12 h-12 bg-gradient-to-r from-emerald-500 to-green-600 rounded-xl flex items-center justify-center shadow-lg">
 										<Brain className="w-7 h-7 text-white" />
 									</div>
 									<div>
@@ -232,12 +232,12 @@ const Navbar = () => {
 										<motion.a
 											key={item.label}
 											href={item.href}
-											className="block text-lg font-medium text-gray-700 hover:text-blue-600 transition-colors py-3 border-b border-gray-100 hover:border-blue-200"
+											className="block text-lg font-medium text-gray-700 hover:text-emerald-600 transition-colors py-3 border-b border-gray-100 hover:border-emerald-200"
 											custom={index + 1}
 											variants={menuItemVariants}
 											initial="closed"
 											animate="open"
-											whileHover={{ x: 10, color: '#2563eb' }}
+											whileHover={{ x: 10, color: '#059669' }}
 											onClick={() => setIsMenuOpen(false)}
 										>
 											{item.label}
@@ -259,7 +259,7 @@ const Navbar = () => {
 											whileTap={{ scale: 0.98 }}
 										>
 											<Button
-												className="w-full bg-gradient-to-r from-purple-500 to-pink-500 hover:bg-blue-700 shadow-lg text-lg py-6 rounded-xl"
+												className="w-full bg-gradient-to-r from-emerald-500 to-green-600 hover:from-emerald-600 hover:to-green-700 shadow-lg text-lg py-6 rounded-xl"
 												onClick={() => setIsMenuOpen(false)}
 											>
 												Get Started
