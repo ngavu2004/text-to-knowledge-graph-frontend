@@ -13,20 +13,10 @@ export const mindmapApi = {
 			const formData = new FormData();
 			formData.append('file', file);
 
-			const response = await api.post<MindMapData>('/upload', formData, {
-				headers: {
-					'Content-Type': 'multipart/form-data',
-				},
-				onUploadProgress: progressEvent => {
-					// You can use this for upload progress if needed
-					const percentCompleted = Math.round(
-						(progressEvent.loaded * 100) / (progressEvent.total || 1)
-					);
-					console.log(`Upload Progress: ${percentCompleted}%`);
-				},
-			});
-
-			// Since the API directly returns the mind map data structure, return it directly
+			const response = await api.post<MindMapData>(
+				'/get_presigned_url',
+				formData
+			);
 			return response.data;
 		} catch (error) {
 			console.error('Upload and process error:', error);
