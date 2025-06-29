@@ -14,7 +14,7 @@ export const useMindMapGeneration = () => {
 			const newMindMap: GeneratedMindMap = {
 				id: Math.random().toString(36).substr(2, 9),
 				title: uploadedFile.name.replace(/\.[^/.]+$/, ''),
-				shareUrl: `https://mindpaper.ai/share/${Math.random().toString(36).substr(2, 16)}`,
+				shareUrl: `https://mindpaper.ai/share/${Math.random().toString(36).substring(2, 16)}`,
 				previewImage:
 					'https://via.placeholder.com/400x300/6366f1/ffffff?text=Mind+Map+Preview',
 				createdAt: new Date(),

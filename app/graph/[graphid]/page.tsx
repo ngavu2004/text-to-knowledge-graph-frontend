@@ -54,14 +54,12 @@ export default function GraphPage() {
 	const [error, setError] = useState<string | null>(null);
 	const [showSuccessAlert, setShowSuccessAlert] = useState(false);
 
-	// Fetch mind map data from localStorage or URL params
 	useEffect(() => {
 		const loadGraphData = async () => {
 			try {
 				setIsLoading(true);
 				setError(null);
 
-				// First try to get data from URL search params (when sharing)
 				const dataParam = searchParams.get('data');
 				const titleParam = searchParams.get('title');
 
@@ -77,7 +75,6 @@ export default function GraphPage() {
 							isPublic: true,
 						});
 
-						// Show success alert
 						setShowSuccessAlert(true);
 						return;
 					} catch (parseError) {
@@ -85,7 +82,6 @@ export default function GraphPage() {
 					}
 				}
 
-				// Then try localStorage (for recently generated graphs)
 				const storageKey = `mindmap_${graphId}`;
 				const storedData = localStorage.getItem(storageKey);
 
@@ -101,7 +97,6 @@ export default function GraphPage() {
 							isPublic: parsedData.isPublic || false,
 						});
 
-						// Update view count in localStorage
 						localStorage.setItem(
 							storageKey,
 							JSON.stringify({
@@ -118,7 +113,6 @@ export default function GraphPage() {
 					}
 				}
 
-				// If no data found, show error
 				setError('Graph not found or has expired');
 			} catch (err) {
 				console.error('Error loading graph:', err);
@@ -133,7 +127,6 @@ export default function GraphPage() {
 		}
 	}, [graphId, searchParams]);
 
-	// Auto-hide success alert after 3 seconds
 	useEffect(() => {
 		if (showSuccessAlert) {
 			const timer = setTimeout(() => {
