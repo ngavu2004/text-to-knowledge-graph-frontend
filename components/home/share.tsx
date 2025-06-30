@@ -48,6 +48,8 @@ export const ShareModal: React.FC<ShareModalProps> = ({
 		}
 	}, [isOpen, resetShareState]);
 
+	const isTextBased = fileId?.startsWith('text-');
+
 	const handleOpenGraph = () => {
 		// Navigate to the graph page with share ID (not file ID)
 		if (shareId) {
@@ -87,7 +89,7 @@ export const ShareModal: React.FC<ShareModalProps> = ({
 											<div className="flex items-center space-x-3">
 												<div className="w-10 h-10 bg-white/20 rounded-lg flex items-center justify-center">
 													<Share2 className="w-5 h-5" />
-												</div>
+												</div>{' '}
 												<div>
 													<h2 className="text-xl font-bold">
 														Share Your Mind Map
@@ -95,7 +97,9 @@ export const ShareModal: React.FC<ShareModalProps> = ({
 													<p className="text-emerald-100 text-sm">
 														{isGenerating
 															? 'Generating share link...'
-															: 'Copy this link to share your mind map with others.'}
+															: isTextBased
+																? 'Create a persistent link that works across browser sessions.'
+																: 'Share this session-based mind map with others.'}
 													</p>
 												</div>
 											</div>
@@ -112,23 +116,43 @@ export const ShareModal: React.FC<ShareModalProps> = ({
 
 									{/* Content */}
 									<div className="p-6 space-y-6">
+										{' '}
 										{/* Error Display */}
 										{error && (
 											<Alert className="border-red-200 bg-red-50">
-												<div className="flex items-center justify-between">
-													<span className="text-red-800 text-sm">{error}</span>
-													<Button
-														variant="outline"
-														size="sm"
-														onClick={handleRetryGenerate}
-														className="text-red-600 border-red-300 hover:bg-red-100"
-													>
-														Retry
-													</Button>
+												<div className="space-y-3">
+													<div className="flex items-start justify-between">
+														<div className="flex-1">
+															<span className="text-red-800 text-sm font-medium">
+																{error.includes('backend') ||
+																error.includes('not implemented')
+																	? 'Sharing Feature Unavailable'
+																	: 'Error Generating Share Link'}
+															</span>
+															<p className="text-red-700 text-xs mt-1">
+																{error}
+															</p>
+															{(error.includes('backend') ||
+																error.includes('not implemented')) && (
+																<p className="text-red-600 text-xs mt-2">
+																	The mind map can still be used locally.
+																	Sharing functionality requires backend
+																	implementation.
+																</p>
+															)}
+														</div>
+														<Button
+															variant="outline"
+															size="sm"
+															onClick={handleRetryGenerate}
+															className="text-red-600 border-red-300 hover:bg-red-100 ml-3"
+														>
+															Retry
+														</Button>
+													</div>
 												</div>
 											</Alert>
 										)}
-
 										{/* URL Input and Copy */}
 										<div className="space-y-3">
 											<label className="text-sm font-medium text-gray-700">
@@ -175,7 +199,6 @@ export const ShareModal: React.FC<ShareModalProps> = ({
 												</Button>
 											</div>
 										</div>
-
 										{/* Success Message */}
 										<AnimatePresence>
 											{isCopied && (
@@ -192,7 +215,6 @@ export const ShareModal: React.FC<ShareModalProps> = ({
 												</motion.div>
 											)}
 										</AnimatePresence>
-
 										{/* Quick Actions */}
 										<div className="flex space-x-3 pt-2">
 											<Button
