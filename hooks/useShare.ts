@@ -67,7 +67,6 @@ export const useShare = () => {
 		async (shareUrl?: string) => {
 			const urlToCopy = shareUrl || shareState.shareUrl || shareState.shortUrl;
 			if (!urlToCopy) {
-				console.error('No URL to copy');
 				return;
 			}
 
@@ -79,7 +78,7 @@ export const useShare = () => {
 					2000
 				);
 			} catch (err) {
-				console.error('Failed to copy link:', err);
+				console.error('❌ Failed to copy link:', err);
 			}
 		},
 		[shareState.shareUrl, shareState.shortUrl]
@@ -89,7 +88,6 @@ export const useShare = () => {
 		(platform: string, title: string = 'My Mind Map', shareUrl?: string) => {
 			const url = shareUrl || shareState.shareUrl || shareState.shortUrl;
 			if (!url) {
-				console.error('No URL to share');
 				return;
 			}
 

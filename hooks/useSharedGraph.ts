@@ -2,12 +2,14 @@
 import { useState, useCallback, useEffect } from 'react';
 import { MindMapData } from '../types/mindmap';
 import { mindmapApi } from '../lib/api/llm';
+import { transformGraphData, BackendGraphData } from '../lib/graph-transform';
 
 interface SharedGraphState {
 	isLoading: boolean;
 	error: string | null;
 	graphData: MindMapData | null;
 	fileId: string | null;
+	fileName: string | null;
 	createdAt: string | null;
 	viewCount: number;
 }
@@ -18,6 +20,7 @@ export const useSharedGraph = (shareId?: string) => {
 		error: null,
 		graphData: null,
 		fileId: null,
+		fileName: null,
 		createdAt: null,
 		viewCount: 0,
 	});
@@ -30,19 +33,92 @@ export const useSharedGraph = (shareId?: string) => {
 		}));
 
 		try {
-			const sharedGraph = await mindmapApi.getSharedGraph(id);
+			// Smart detection: UUID format suggests it's likely a file ID, not a share ID
+			const isLikelyFileId =
+				/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(
+					id
+				);
 
-			setState({
-				isLoading: false,
-				error: null,
-				graphData: sharedGraph.graph_data,
-				fileId: sharedGraph.file_id,
-				createdAt: sharedGraph.created_at,
-				viewCount: sharedGraph.view_count,
-			});
+			if (isLikelyFileId) {
+				// Try direct file access first for UUID-formatted IDs
+				try {
+					const fileResponse = await mindmapApi.getSavedGraph(id);
+
+					if (fileResponse.status === 'completed' && fileResponse.graph_data) {
+						// Transform backend data format to frontend format
+						const backendData = fileResponse.graph_data as BackendGraphData;
+						const transformedData = transformGraphData(backendData);
+
+						setState({
+							isLoading: false,
+							error: null,
+							graphData: transformedData,
+							fileId: id, // The ID is the file ID in this case
+							fileName: fileResponse.file_name || 'Unknown File',
+							createdAt: fileResponse.processed_at || new Date().toISOString(),
+							viewCount: 0, // No view count for direct file access
+						});
+						return;
+					} else {
+						// Fall back to shared graph if direct access fails
+					}
+				} catch {
+					// Fall back to shared graph
+				}
+			}
+
+			// Try shared graph access (either first choice for non-UUIDs, or fallback for UUIDs)
+			try {
+				const sharedGraph = await mindmapApi.getSharedGraph(id);
+
+				// Transform backend data format to frontend format
+				const backendData = sharedGraph.graph_data as BackendGraphData;
+				const transformedData = transformGraphData(backendData);
+
+				setState({
+					isLoading: false,
+					error: null,
+					graphData: transformedData,
+					fileId: sharedGraph.file_id,
+					fileName: sharedGraph.file_name || 'Shared Mind Map',
+					createdAt: sharedGraph.created_at,
+					viewCount: sharedGraph.view_count,
+				});
+				return;
+			} catch {
+				// Only try direct file access as fallback if we haven't already tried it
+				if (!isLikelyFileId) {
+					const fileResponse = await mindmapApi.getSavedGraph(id);
+
+					if (fileResponse.status === 'completed' && fileResponse.graph_data) {
+						// Transform backend data format to frontend format
+						const backendData = fileResponse.graph_data as BackendGraphData;
+						const transformedData = transformGraphData(backendData);
+
+						setState({
+							isLoading: false,
+							error: null,
+							graphData: transformedData,
+							fileId: id, // The ID is the file ID in this case
+							fileName: fileResponse.file_name || 'Unknown File',
+							createdAt: fileResponse.processed_at || new Date().toISOString(),
+							viewCount: 0, // No view count for direct file access
+						});
+						return;
+					} else {
+						throw new Error(
+							'Graph is still being processed or failed to process'
+						);
+					}
+				} else {
+					// We already tried both approaches for UUID, so give up
+					throw new Error('Graph not found or is still being processed');
+				}
+			}
 		} catch (error) {
+			console.error('❌ Failed to load graph:', error);
 			const errorMessage =
-				error instanceof Error ? error.message : 'Failed to load shared graph';
+				error instanceof Error ? error.message : 'Failed to load graph';
 			setState(prev => ({
 				...prev,
 				isLoading: false,

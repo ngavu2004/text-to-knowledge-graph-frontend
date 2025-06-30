@@ -25,6 +25,7 @@ export const ShareModal: React.FC<ShareModalProps> = ({
 	const router = useRouter();
 	const {
 		shareUrl,
+		shareId,
 		isGenerating,
 		error,
 		isCopied,
@@ -48,9 +49,9 @@ export const ShareModal: React.FC<ShareModalProps> = ({
 	}, [isOpen, resetShareState]);
 
 	const handleOpenGraph = () => {
-		// Navigate to the graph page with file ID
-		if (fileId) {
-			router.push(`/graph/${fileId}`);
+		// Navigate to the graph page with share ID (not file ID)
+		if (shareId) {
+			router.push(`/graph/${shareId}`);
 		}
 	};
 
@@ -203,7 +204,7 @@ export const ShareModal: React.FC<ShareModalProps> = ({
 											</Button>
 											<Button
 												onClick={handleOpenGraph}
-												disabled={!fileId}
+												disabled={!shareId}
 												className="flex-1 bg-gradient-to-r from-emerald-600 to-green-700 hover:from-emerald-700 hover:to-green-800 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
 											>
 												<ExternalLink className="w-4 h-4 mr-2" />

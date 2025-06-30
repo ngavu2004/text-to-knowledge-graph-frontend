@@ -1,7 +1,8 @@
 'use client';
 import React from 'react';
 import { motion } from 'framer-motion';
-import { Brain, Upload, Cog } from 'lucide-react';
+import { Brain, Upload, Cog, X } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 
 interface ProcessingContentProps {
 	processingStatus?:
@@ -11,11 +12,15 @@ interface ProcessingContentProps {
 		| 'completed'
 		| 'error';
 	uploadProgress?: number;
+	onCancel?: () => void;
+	estimatedTimeRemaining?: string;
 }
 
 export const ProcessingContent: React.FC<ProcessingContentProps> = ({
 	processingStatus = 'processing',
 	uploadProgress = 0,
+	onCancel,
+	estimatedTimeRemaining,
 }) => {
 	const getStatusInfo = () => {
 		switch (processingStatus) {
@@ -25,6 +30,7 @@ export const ProcessingContent: React.FC<ProcessingContentProps> = ({
 					title: 'Uploading your file...',
 					description: 'Securely uploading to cloud storage',
 					showProgress: true,
+					canCancel: false,
 				};
 			case 'processing':
 				return {
@@ -33,6 +39,7 @@ export const ProcessingContent: React.FC<ProcessingContentProps> = ({
 					description:
 						'This may take up to 15 minutes for complex documents. Please keep this tab open.',
 					showProgress: true,
+					canCancel: true,
 				};
 			default:
 				return {
@@ -40,6 +47,7 @@ export const ProcessingContent: React.FC<ProcessingContentProps> = ({
 					title: 'Processing your file...',
 					description: 'Analyzing your document',
 					showProgress: false,
+					canCancel: false,
 				};
 		}
 	};
@@ -90,10 +98,30 @@ export const ProcessingContent: React.FC<ProcessingContentProps> = ({
 							/>
 						</div>
 						{processingStatus === 'processing' && (
-							<p className="text-xs text-gray-500 mt-2 text-center">
-								Processing large documents can take several minutes. Thank you
-								for your patience!
-							</p>
+							<div className="space-y-3 mt-4">
+								<p className="text-xs text-gray-500 text-center">
+									Processing large documents can take several minutes. Thank you
+									for your patience!
+								</p>
+								{estimatedTimeRemaining && (
+									<p className="text-xs text-blue-600 text-center font-medium">
+										Estimated time remaining: {estimatedTimeRemaining}
+									</p>
+								)}
+								{statusInfo.canCancel && onCancel && (
+									<div className="flex justify-center mt-4">
+										<Button
+											variant="outline"
+											size="sm"
+											onClick={onCancel}
+											className="text-gray-600 hover:text-gray-800 border-gray-300"
+										>
+											<X className="w-4 h-4 mr-2" />
+											Cancel Processing
+										</Button>
+									</div>
+								)}
+							</div>
 						)}
 					</div>
 				)}

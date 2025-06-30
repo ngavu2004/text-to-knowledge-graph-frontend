@@ -25,6 +25,7 @@ export interface GraphDataResponse {
 	message?: string;
 	graph_data?: MindMapData;
 	file_id?: string;
+	file_name?: string;
 	processed_at?: string;
 	error?: string;
 }
@@ -43,6 +44,7 @@ export interface ShareLinkResponse {
 export interface SharedGraphResponse {
 	graph_data: MindMapData;
 	file_id: string;
+	file_name?: string;
 	created_at: string;
 	view_count: number;
 }
