@@ -8,7 +8,7 @@ import { AlertCircle, Type, Loader2, Sparkles } from 'lucide-react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 
 // Constants
-const MAX_TEXT_CHARACTERS = 2500;
+const MAX_TEXT_CHARACTERS = 2000;
 
 interface TextInputCardProps {
 	text: string;
