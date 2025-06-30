@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
-import { useParams, useRouter, useSearchParams } from 'next/navigation';
+import { useParams, useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -30,102 +30,27 @@ import {
 	CheckCircle,
 	ArrowLeft,
 } from 'lucide-react';
-import { MindMapData } from '@/types/mindmap';
 import { AnimatedGridPattern } from '@/components/magicui/animated-grid-pattern';
+import { useSharedGraph } from '@/hooks/useSharedGraph';
 import Link from 'next/link';
-
-interface GraphMetadata {
-	id: string;
-	title: string;
-	createdAt: string;
-	views: number;
-	isPublic: boolean;
-}
 
 export default function GraphPage() {
 	const params = useParams();
 	const router = useRouter();
-	const searchParams = useSearchParams();
-	const graphId = params.graphid as string;
+	const shareId = params.graphid as string;
 
-	const [mindMapData, setMindMapData] = useState<MindMapData | null>(null);
-	const [metadata, setMetadata] = useState<GraphMetadata | null>(null);
-	const [isLoading, setIsLoading] = useState(true);
-	const [error, setError] = useState<string | null>(null);
+	// Use the new shared graph hook
+	const { graphData, isLoading, error, createdAt, viewCount } =
+		useSharedGraph(shareId);
+
 	const [showSuccessAlert, setShowSuccessAlert] = useState(false);
 
+	// Show success alert when graph loads
 	useEffect(() => {
-		const loadGraphData = async () => {
-			try {
-				setIsLoading(true);
-				setError(null);
-
-				const dataParam = searchParams.get('data');
-				const titleParam = searchParams.get('title');
-
-				if (dataParam) {
-					try {
-						const decodedData = JSON.parse(decodeURIComponent(dataParam));
-						setMindMapData(decodedData);
-						setMetadata({
-							id: graphId,
-							title: titleParam || 'Shared Mind Map',
-							createdAt: new Date().toISOString(),
-							views: 1,
-							isPublic: true,
-						});
-
-						setShowSuccessAlert(true);
-						return;
-					} catch (parseError) {
-						console.error('Error parsing URL data:', parseError);
-					}
-				}
-
-				const storageKey = `mindmap_${graphId}`;
-				const storedData = localStorage.getItem(storageKey);
-
-				if (storedData) {
-					try {
-						const parsedData = JSON.parse(storedData);
-						setMindMapData(parsedData.mindMapData);
-						setMetadata({
-							id: graphId,
-							title: parsedData.title || 'Mind Map',
-							createdAt: parsedData.createdAt || new Date().toISOString(),
-							views: (parsedData.views || 0) + 1,
-							isPublic: parsedData.isPublic || false,
-						});
-
-						localStorage.setItem(
-							storageKey,
-							JSON.stringify({
-								...parsedData,
-								views: (parsedData.views || 0) + 1,
-							})
-						);
-
-						// Show success alert
-						setShowSuccessAlert(true);
-						return;
-					} catch (parseError) {
-						console.error('Error parsing stored data:', parseError);
-					}
-				}
-
-				setError('Graph not found or has expired');
-			} catch (err) {
-				console.error('Error loading graph:', err);
-				setError('Failed to load graph');
-			} finally {
-				setIsLoading(false);
-			}
-		};
-
-		if (graphId) {
-			loadGraphData();
+		if (graphData) {
+			setShowSuccessAlert(true);
 		}
-	}, [graphId, searchParams]);
+	}, [graphData]);
 
 	useEffect(() => {
 		if (showSuccessAlert) {
@@ -137,12 +62,10 @@ export default function GraphPage() {
 	}, [showSuccessAlert]);
 
 	const handleShare = () => {
-		if (!mindMapData || !metadata) return;
+		if (!graphData) return;
 
-		// Create shareable URL with data
-		const dataParam = encodeURIComponent(JSON.stringify(mindMapData));
-		const titleParam = encodeURIComponent(metadata.title);
-		const shareUrl = `${window.location.origin}/graph/${graphId}?data=${dataParam}&title=${titleParam}`;
+		// Create shareable URL with the shareId
+		const shareUrl = `${window.location.origin}/graph/${shareId}`;
 
 		navigator.clipboard
 			.writeText(shareUrl)
@@ -155,13 +78,13 @@ export default function GraphPage() {
 	};
 
 	const handleDownload = () => {
-		if (!mindMapData || !metadata) return;
+		if (!graphData) return;
 
-		const dataStr = JSON.stringify(mindMapData, null, 2);
+		const dataStr = JSON.stringify(graphData, null, 2);
 		const dataUri =
 			'data:application/json;charset=utf-8,' + encodeURIComponent(dataStr);
 
-		const exportFileDefaultName = `${metadata.title.replace(/[^a-z0-9]/gi, '_').toLowerCase()}_mindmap.json`;
+		const exportFileDefaultName = `shared_mindmap_${shareId}.json`;
 
 		const linkElement = document.createElement('a');
 		linkElement.setAttribute('href', dataUri);
@@ -272,7 +195,7 @@ export default function GraphPage() {
 		);
 	}
 
-	if (!mindMapData || !metadata) {
+	if (!graphData) {
 		return null;
 	}
 
@@ -304,7 +227,7 @@ export default function GraphPage() {
 								<BreadcrumbItem>
 									<BreadcrumbPage className="flex items-center">
 										<Brain className="w-4 h-4 mr-1" />
-										{metadata?.title || 'Mind Map'}
+										Shared Mind Map
 									</BreadcrumbPage>
 								</BreadcrumbItem>
 							</BreadcrumbList>
@@ -341,24 +264,24 @@ export default function GraphPage() {
 								<div className="flex items-center justify-between">
 									<div>
 										<h1 className="text-2xl font-bold text-gray-900 flex items-center">
-											{metadata.title}
+											Shared Mind Map
 										</h1>
 										<div className="flex items-center space-x-4 text-sm text-gray-600 mt-1">
 											<div className="flex items-center">
 												<Clock className="w-4 h-4 mr-1" />
 												Created{' '}
-												{new Date(metadata.createdAt).toLocaleDateString()}
+												{createdAt
+													? new Date(createdAt).toLocaleDateString()
+													: 'Unknown date'}
 											</div>
 											<div className="flex items-center">
 												<Eye className="w-4 h-4 mr-1" />
-												{metadata.views} views
+												{viewCount} views
 											</div>
-											{metadata.isPublic && (
-												<div className="flex items-center">
-													<Users className="w-4 h-4 mr-1" />
-													Public
-												</div>
-											)}
+											<div className="flex items-center">
+												<Users className="w-4 h-4 mr-1" />
+												Public
+											</div>
 										</div>
 									</div>
 
@@ -417,7 +340,7 @@ export default function GraphPage() {
 									<div className="relative z-10 flex items-center justify-between">
 										<div>
 											<h2 className="text-2xl font-bold mb-2">
-												{metadata.title} Mind Map
+												Shared Mind Map
 											</h2>
 											<p className="text-emerald-100 text-sm">
 												Explore the interconnected knowledge graph
@@ -425,10 +348,10 @@ export default function GraphPage() {
 										</div>
 										<div className="text-right">
 											<div className="text-lg font-semibold">
-												{mindMapData.nodes.length} nodes
+												{graphData.nodes.length} nodes
 											</div>
 											<div className="text-sm opacity-90">
-												{mindMapData.relationships.length} connections
+												{graphData.relationships.length} connections
 											</div>
 										</div>
 									</div>
@@ -437,7 +360,7 @@ export default function GraphPage() {
 								<div className="p-8 bg-gradient-to-br from-gray-50 to-white min-h-[600px] flex items-center justify-center">
 									<div className="w-full flex justify-center">
 										<MindMap
-											data={mindMapData}
+											data={graphData}
 											width={
 												typeof window !== 'undefined'
 													? Math.min(window.innerWidth - 180, 1400)
@@ -494,7 +417,7 @@ export default function GraphPage() {
 												</svg>
 											</div>
 											<div className="text-3xl font-bold text-emerald-600 mb-1">
-												{mindMapData.nodes.length}
+												{graphData.nodes.length}
 											</div>
 											<div className="text-sm font-medium text-gray-600">
 												Total Nodes
@@ -521,7 +444,7 @@ export default function GraphPage() {
 												</svg>
 											</div>
 											<div className="text-3xl font-bold text-green-600 mb-1">
-												{mindMapData.relationships.length}
+												{graphData.relationships.length}
 											</div>
 											<div className="text-sm font-medium text-gray-600">
 												Relationships
@@ -553,7 +476,7 @@ export default function GraphPage() {
 												</svg>
 											</div>
 											<div className="text-3xl font-bold text-teal-600 mb-1">
-												{mindMapData.chunks_processed || 0}
+												{graphData.chunks_processed || 0}
 											</div>
 											<div className="text-sm font-medium text-gray-600">
 												Chunks Processed

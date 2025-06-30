@@ -1,8 +1,6 @@
 'use client';
 import React, { useState, useEffect } from 'react';
 import { useFileUpload } from '@/hooks/useFileUpload';
-import { useMindMapGeneration } from '@/hooks/useMapGenerate';
-import { useShare } from '@/hooks/useShare';
 import { Header } from '@/components/home/header';
 import { FileUploadCard } from '@/components/home/file-upload';
 import { MindMapPreview } from '@/components/home/map-preview';
@@ -13,11 +11,12 @@ import { AnimatedGridPattern } from '@/components/magicui/animated-grid-pattern'
 const Home: React.FC = () => {
 	// Custom hooks for state management
 	const fileUpload = useFileUpload();
-	const mindMapGeneration = useMindMapGeneration();
-	const share = useShare();
 
 	// Policy dialog state
 	const [showPolicyDialog, setShowPolicyDialog] = useState(false);
+
+	// Share modal state
+	const [isShareOpen, setIsShareOpen] = useState(false);
 
 	// Check if user has already accepted policies on mount
 	useEffect(() => {
@@ -49,33 +48,24 @@ const Home: React.FC = () => {
 		setShowPolicyDialog(false);
 	};
 
-	// Handle generate mind map - now just creates the metadata since data is already loaded
+	// Handle generate mind map - now triggers the actual upload and processing
 	const handleGenerateMindMap = () => {
-		if (fileUpload.uploadedFile && fileUpload.mindMapData) {
-			mindMapGeneration.createMindMapFromData(
-				fileUpload.uploadedFile,
-				fileUpload.mindMapData
-			);
-		}
+		// Now this triggers the actual upload and processing
+		fileUpload.uploadAndProcessFile();
 	};
 
 	// Handle start over
 	const handleStartOver = () => {
 		fileUpload.resetUpload();
-		mindMapGeneration.resetMindMap();
 	};
 
-	// Handle share actions
-	const handleCopyLink = () => {
-		if (mindMapGeneration.generatedMindMap) {
-			share.handleCopyLink(mindMapGeneration.generatedMindMap);
-		}
+	// Handle share modal
+	const handleOpenShareModal = () => {
+		setIsShareOpen(true);
 	};
 
-	const handleSocialShare = (platform: string) => {
-		if (mindMapGeneration.generatedMindMap) {
-			share.handleSocialShare(platform, mindMapGeneration.generatedMindMap);
-		}
+	const handleCloseShareModal = () => {
+		setIsShareOpen(false);
 	};
 
 	return (
@@ -90,12 +80,14 @@ const Home: React.FC = () => {
 						<Header />{' '}
 						<div className="space-y-8">
 							{/* File Upload Section */}
-							{!mindMapGeneration.generatedMindMap && (
+							{fileUpload.processingStatus !== 'completed' && (
 								<FileUploadCard
 									isDragOver={fileUpload.isDragOver}
 									uploadedFile={fileUpload.uploadedFile}
+									selectedFile={fileUpload.selectedFile}
 									isProcessing={fileUpload.isProcessing}
-									isGenerating={false} // No separate generation step anymore
+									processingStatus={fileUpload.processingStatus}
+									uploadProgress={fileUpload.uploadProgress}
 									error={fileUpload.error}
 									acceptedTypesString={fileUpload.acceptedTypesString}
 									supportedTypesDisplay={fileUpload.supportedTypesDisplay}
@@ -113,32 +105,31 @@ const Home: React.FC = () => {
 							)}
 
 							{/* Mind Map Preview Section */}
-							{mindMapGeneration.generatedMindMap && (
-								<MindMapPreview
-									generatedMindMap={mindMapGeneration.generatedMindMap}
-									mindMapData={fileUpload.mindMapData}
-									onStartOver={handleStartOver}
-									onShare={share.openShareModal}
-								/>
-							)}
+							{fileUpload.processingStatus === 'completed' &&
+								fileUpload.mindMapData && (
+									<MindMapPreview
+										fileId={fileUpload.fileId}
+										mindMapData={fileUpload.mindMapData}
+										fileName={fileUpload.uploadedFile?.name}
+										onStartOver={handleStartOver}
+										onShare={handleOpenShareModal}
+									/>
+								)}
 						</div>
 					</div>
 				</div>
 			</div>
 
 			{/* Share Modal */}
-			{mindMapGeneration.generatedMindMap && (
-				<ShareModal
-					isOpen={share.isShareOpen}
-					generatedMindMap={mindMapGeneration.generatedMindMap}
-					mindMapData={fileUpload.mindMapData}
-					shortUrl={share.shortUrl}
-					isCopied={share.isCopied}
-					onClose={share.closeShareModal}
-					onCopyLink={handleCopyLink}
-					onSocialShare={handleSocialShare}
-				/>
-			)}
+			{fileUpload.processingStatus === 'completed' &&
+				fileUpload.mindMapData && (
+					<ShareModal
+						isOpen={isShareOpen}
+						fileId={fileUpload.fileId}
+						mindMapData={fileUpload.mindMapData}
+						onClose={handleCloseShareModal}
+					/>
+				)}
 
 			{/* Policy Dialog - Appears only once on first visit after loading */}
 			<PolicyDialog isOpen={showPolicyDialog} onAccept={handlePolicyAccept} />
