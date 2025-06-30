@@ -43,9 +43,23 @@ export const mindmapApi = {
 			}
 
 			// Transform backend response to MindMapData format
+			const relationships = (response.data.edges || []).map(
+				(edge: {
+					source: string;
+					target: string;
+					relation: string;
+					properties?: Record<string, unknown>;
+				}) => ({
+					source: edge.source,
+					target: edge.target,
+					type: edge.relation,
+					properties: edge.properties || {},
+				})
+			);
+
 			const mindMapData: MindMapData = {
 				nodes: response.data.nodes || [],
-				relationships: response.data.relationships || [],
+				relationships: relationships,
 				chunks_processed: 1, // Text input counts as 1 chunk
 			};
 

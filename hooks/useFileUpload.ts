@@ -33,10 +33,7 @@ export const useFileUpload = () => {
 
 	// Configuration
 	const maxSizeInMB = 10;
-	const acceptedFileTypes = useMemo(
-		() => ['.txt', '.pdf', '.doc', '.docx'],
-		[]
-	);
+	const acceptedFileTypes = useMemo(() => ['.pdf'], []);
 	const maxSizeBytes = useMemo(() => maxSizeInMB * 1024 * 1024, [maxSizeInMB]);
 	const acceptedTypesString = useMemo(
 		() => acceptedFileTypes.join(','),

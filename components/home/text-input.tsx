@@ -27,6 +27,8 @@ export const TextInputCard: React.FC<TextInputCardProps> = ({
 	onClear,
 }) => {
 	const isValidText = text.trim().length > 10; // Minimum text length for processing
+	const maxCharacters = 2500;
+	const isOverLimit = text.length > maxCharacters;
 
 	return (
 		<motion.div
@@ -63,6 +65,19 @@ export const TextInputCard: React.FC<TextInputCardProps> = ({
 							</Alert>
 						)}
 
+						{/* Character Limit Warning */}
+						{isOverLimit && (
+							<Alert className="border-orange-200 bg-orange-50">
+								<AlertCircle className="h-4 w-4 text-orange-600" />
+								<AlertDescription className="text-orange-800">
+									<span className="font-medium">Text too long!</span>{' '}
+									You&apos;ve exceeded the {maxCharacters.toLocaleString()}{' '}
+									character limit ({text.length.toLocaleString()} characters).
+									For longer content, please use the file upload option instead.
+								</AlertDescription>
+							</Alert>
+						)}
+
 						{/* Text Input Area */}
 						<div className="space-y-3">
 							<label className="text-sm font-medium text-gray-700">
@@ -77,13 +92,24 @@ export const TextInputCard: React.FC<TextInputCardProps> = ({
 								className="w-full px-4 py-3 border border-gray-200 rounded-lg text-sm resize-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent disabled:opacity-50 disabled:bg-gray-50"
 							/>
 							<div className="flex justify-between items-center text-xs text-gray-500">
-								<span>{text.length} characters</span>
+								<span className={isOverLimit ? 'text-red-600 font-medium' : ''}>
+									{text.length.toLocaleString()} /{' '}
+									{maxCharacters.toLocaleString()} characters
+								</span>
 								<span
-									className={isValidText ? 'text-green-600' : 'text-orange-500'}
+									className={
+										isOverLimit
+											? 'text-red-600 font-medium'
+											: isValidText
+												? 'text-green-600'
+												: 'text-orange-500'
+									}
 								>
-									{isValidText
-										? 'Ready to process'
-										: 'Need at least 10 characters'}
+									{isOverLimit
+										? 'Over character limit'
+										: isValidText
+											? 'Ready to process'
+											: 'Need at least 10 characters'}
 								</span>
 							</div>
 						</div>
@@ -106,7 +132,7 @@ export const TextInputCard: React.FC<TextInputCardProps> = ({
 						<div className="flex space-x-3">
 							<Button
 								onClick={onGenerateMindMap}
-								disabled={!isValidText || isProcessing}
+								disabled={!isValidText || isProcessing || isOverLimit}
 								className="flex-1 bg-gradient-to-r from-emerald-600 to-green-700 hover:from-emerald-700 hover:to-green-800 text-white cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
 							>
 								{isProcessing ? (
@@ -141,6 +167,10 @@ export const TextInputCard: React.FC<TextInputCardProps> = ({
 								<li>• Use clear, structured text with proper grammar</li>
 								<li>
 									• Include specific entities, relationships, and concepts
+								</li>
+								<li>
+									• Keep text under {maxCharacters.toLocaleString()} characters
+									(use file upload for longer content)
 								</li>
 								<li>• Longer text generally produces richer mind maps</li>
 							</ul>
