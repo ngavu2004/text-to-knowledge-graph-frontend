@@ -1,51 +1,64 @@
 'use client';
-import React from 'react';
+import React, { useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
-import { Share2, X, Copy, Check, ExternalLink } from 'lucide-react';
-import { GeneratedMindMap, MindMapData } from '../../types/mindmap';
+import { Alert } from '@/components/ui/alert';
+import { Share2, X, Copy, Check, ExternalLink, Loader2 } from 'lucide-react';
+import { MindMapData } from '../../types/mindmap';
 import { useRouter } from 'next/navigation';
-// import { socialButtons } from '@/constants';
+import { useShare } from '@/hooks/useShare';
 
 interface ShareModalProps {
 	isOpen: boolean;
-	generatedMindMap: GeneratedMindMap;
+	fileId: string | null;
 	mindMapData: MindMapData | null;
-	shortUrl: string | null;
-	isCopied: boolean;
 	onClose: () => void;
-	onCopyLink: () => void;
-	onSocialShare: (platform: string) => void;
 }
 
 export const ShareModal: React.FC<ShareModalProps> = ({
 	isOpen,
-	generatedMindMap,
+	fileId,
 	mindMapData,
-	shortUrl,
-	isCopied,
 	onClose,
-	onCopyLink,
-	// onSocialShare,
 }) => {
 	const router = useRouter();
+	const {
+		shareUrl,
+		shareId,
+		isGenerating,
+		error,
+		isCopied,
+		generateShareLink,
+		handleCopyLink,
+		resetShareState,
+	} = useShare();
+
+	// Generate share link when modal opens
+	useEffect(() => {
+		if (isOpen && fileId && mindMapData && !shareUrl) {
+			generateShareLink(fileId, mindMapData);
+		}
+	}, [isOpen, fileId, mindMapData, shareUrl, generateShareLink]);
+
+	// Reset state when modal closes
+	useEffect(() => {
+		if (!isOpen) {
+			resetShareState();
+		}
+	}, [isOpen, resetShareState]);
 
 	const handleOpenGraph = () => {
-		// Save mind map data to localStorage before navigating
-		if (mindMapData) {
-			const storageKey = `mindmap_${generatedMindMap.id}`;
-			const dataToStore = {
-				mindMapData,
-				title: generatedMindMap.title,
-				createdAt: generatedMindMap.createdAt.toISOString(),
-				views: 0,
-				isPublic: false,
-			};
-			localStorage.setItem(storageKey, JSON.stringify(dataToStore));
+		// Navigate to the graph page with share ID (not file ID)
+		if (shareId) {
+			router.push(`/graph/${shareId}`);
 		}
+	};
 
-		router.push(`/graph/${generatedMindMap.id}`);
+	const handleRetryGenerate = () => {
+		if (fileId && mindMapData) {
+			generateShareLink(fileId, mindMapData);
+		}
 	};
 
 	return (
@@ -80,7 +93,9 @@ export const ShareModal: React.FC<ShareModalProps> = ({
 														Share Your Mind Map
 													</h2>
 													<p className="text-emerald-100 text-sm">
-														Copy this link to share your mind map with others.
+														{isGenerating
+															? 'Generating share link...'
+															: 'Copy this link to share your mind map with others.'}
 													</p>
 												</div>
 											</div>
@@ -97,6 +112,23 @@ export const ShareModal: React.FC<ShareModalProps> = ({
 
 									{/* Content */}
 									<div className="p-6 space-y-6">
+										{/* Error Display */}
+										{error && (
+											<Alert className="border-red-200 bg-red-50">
+												<div className="flex items-center justify-between">
+													<span className="text-red-800 text-sm">{error}</span>
+													<Button
+														variant="outline"
+														size="sm"
+														onClick={handleRetryGenerate}
+														className="text-red-600 border-red-300 hover:bg-red-100"
+													>
+														Retry
+													</Button>
+												</div>
+											</Alert>
+										)}
+
 										{/* URL Input and Copy */}
 										<div className="space-y-3">
 											<label className="text-sm font-medium text-gray-700">
@@ -105,26 +137,36 @@ export const ShareModal: React.FC<ShareModalProps> = ({
 											<div className="flex space-x-2">
 												<input
 													type="text"
-													value={shortUrl || generatedMindMap.shareUrl}
+													value={shareUrl || 'Generating link...'}
 													readOnly
-													className="flex-1 px-4 py-3 bg-gray-50 border border-gray-200 rounded-lg text-sm font-mono focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
-													onClick={e => e.currentTarget.select()}
+													disabled={isGenerating || !shareUrl}
+													className="flex-1 px-4 py-3 bg-gray-50 border border-gray-200 rounded-lg text-sm font-mono focus:ring-2 focus:ring-emerald-500 focus:border-transparent disabled:opacity-50"
+													onClick={e => shareUrl && e.currentTarget.select()}
 												/>
 												<Button
-													onClick={onCopyLink}
+													onClick={() => shareUrl && handleCopyLink(shareUrl)}
+													disabled={isGenerating || !shareUrl}
 													className={`px-4 py-3 transition-all duration-200 ${
 														isCopied
 															? 'bg-green-600 hover:bg-green-700'
 															: 'bg-emerald-600 hover:bg-emerald-700'
-													} cursor-pointer`}
+													} cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed`}
 												>
 													<motion.div
-														key={isCopied ? 'check' : 'copy'}
+														key={
+															isGenerating
+																? 'loading'
+																: isCopied
+																	? 'check'
+																	: 'copy'
+														}
 														initial={{ scale: 0.8, opacity: 0 }}
 														animate={{ scale: 1, opacity: 1 }}
 														transition={{ duration: 0.2 }}
 													>
-														{isCopied ? (
+														{isGenerating ? (
+															<Loader2 className="w-4 h-4 animate-spin" />
+														) : isCopied ? (
 															<Check className="w-4 h-4" />
 														) : (
 															<Copy className="w-4 h-4" />
@@ -133,28 +175,6 @@ export const ShareModal: React.FC<ShareModalProps> = ({
 												</Button>
 											</div>
 										</div>
-
-										{/* Social Share Buttons */}
-										{/* <div className="space-y-3">
-                                            <label className="text-sm font-medium text-gray-700">
-                                                Share on Social Media
-                                            </label>
-                                            <div className="grid grid-cols-3 gap-3">
-                                                {socialButtons.map(({ icon: Icon, label, platform, color }, index) => (
-                                                    <motion.button
-                                                        key={platform}
-                                                        onClick={() => onSocialShare(platform)}
-                                                        className={`${color} text-white p-3 rounded-lg transition-all duration-200 hover:scale-105 active:scale-95 flex flex-col items-center space-y-1`}
-                                                        initial={{ opacity: 0, y: 20 }}
-                                                        animate={{ opacity: 1, y: 0 }}
-                                                        transition={{ delay: index * 0.1 }}
-                                                    >
-                                                        <Icon className="w-5 h-5" />
-                                                        <span className="text-xs font-medium">{label}</span>
-                                                    </motion.button>
-                                                ))}
-                                            </div>
-                                        </div> */}
 
 										{/* Success Message */}
 										<AnimatePresence>
@@ -184,7 +204,8 @@ export const ShareModal: React.FC<ShareModalProps> = ({
 											</Button>
 											<Button
 												onClick={handleOpenGraph}
-												className="flex-1 bg-gradient-to-r from-emerald-600 to-green-700 hover:from-emerald-700 hover:to-green-800 cursor-pointer"
+												disabled={!shareId}
+												className="flex-1 bg-gradient-to-r from-emerald-600 to-green-700 hover:from-emerald-700 hover:to-green-800 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
 											>
 												<ExternalLink className="w-4 h-4 mr-2" />
 												Open

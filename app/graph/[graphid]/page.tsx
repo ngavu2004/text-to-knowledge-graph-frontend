@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
-import { useParams, useRouter, useSearchParams } from 'next/navigation';
+import { useParams, useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -30,102 +30,28 @@ import {
 	CheckCircle,
 	ArrowLeft,
 } from 'lucide-react';
-import { MindMapData } from '@/types/mindmap';
 import { AnimatedGridPattern } from '@/components/magicui/animated-grid-pattern';
+import { useSharedGraph } from '@/hooks/useSharedGraph';
 import Link from 'next/link';
-
-interface GraphMetadata {
-	id: string;
-	title: string;
-	createdAt: string;
-	views: number;
-	isPublic: boolean;
-}
+import { toast } from 'sonner';
 
 export default function GraphPage() {
 	const params = useParams();
 	const router = useRouter();
-	const searchParams = useSearchParams();
 	const graphId = params.graphid as string;
 
-	const [mindMapData, setMindMapData] = useState<MindMapData | null>(null);
-	const [metadata, setMetadata] = useState<GraphMetadata | null>(null);
-	const [isLoading, setIsLoading] = useState(true);
-	const [error, setError] = useState<string | null>(null);
+	// Use the shared graph hook first, which will handle both share IDs and file IDs
+	const { graphData, isLoading, error, fileName, createdAt, viewCount } =
+		useSharedGraph(graphId);
+
 	const [showSuccessAlert, setShowSuccessAlert] = useState(false);
 
+	// Show success alert when graph loads
 	useEffect(() => {
-		const loadGraphData = async () => {
-			try {
-				setIsLoading(true);
-				setError(null);
-
-				const dataParam = searchParams.get('data');
-				const titleParam = searchParams.get('title');
-
-				if (dataParam) {
-					try {
-						const decodedData = JSON.parse(decodeURIComponent(dataParam));
-						setMindMapData(decodedData);
-						setMetadata({
-							id: graphId,
-							title: titleParam || 'Shared Mind Map',
-							createdAt: new Date().toISOString(),
-							views: 1,
-							isPublic: true,
-						});
-
-						setShowSuccessAlert(true);
-						return;
-					} catch (parseError) {
-						console.error('Error parsing URL data:', parseError);
-					}
-				}
-
-				const storageKey = `mindmap_${graphId}`;
-				const storedData = localStorage.getItem(storageKey);
-
-				if (storedData) {
-					try {
-						const parsedData = JSON.parse(storedData);
-						setMindMapData(parsedData.mindMapData);
-						setMetadata({
-							id: graphId,
-							title: parsedData.title || 'Mind Map',
-							createdAt: parsedData.createdAt || new Date().toISOString(),
-							views: (parsedData.views || 0) + 1,
-							isPublic: parsedData.isPublic || false,
-						});
-
-						localStorage.setItem(
-							storageKey,
-							JSON.stringify({
-								...parsedData,
-								views: (parsedData.views || 0) + 1,
-							})
-						);
-
-						// Show success alert
-						setShowSuccessAlert(true);
-						return;
-					} catch (parseError) {
-						console.error('Error parsing stored data:', parseError);
-					}
-				}
-
-				setError('Graph not found or has expired');
-			} catch (err) {
-				console.error('Error loading graph:', err);
-				setError('Failed to load graph');
-			} finally {
-				setIsLoading(false);
-			}
-		};
-
-		if (graphId) {
-			loadGraphData();
+		if (graphData) {
+			setShowSuccessAlert(true);
 		}
-	}, [graphId, searchParams]);
+	}, [graphData]);
 
 	useEffect(() => {
 		if (showSuccessAlert) {
@@ -137,31 +63,31 @@ export default function GraphPage() {
 	}, [showSuccessAlert]);
 
 	const handleShare = () => {
-		if (!mindMapData || !metadata) return;
+		if (!graphData) return;
 
-		// Create shareable URL with data
-		const dataParam = encodeURIComponent(JSON.stringify(mindMapData));
-		const titleParam = encodeURIComponent(metadata.title);
-		const shareUrl = `${window.location.origin}/graph/${graphId}?data=${dataParam}&title=${titleParam}`;
+		// Create shareable URL with the shareId
+		const shareUrl = `${window.location.origin}/graph/${graphId}`;
 
 		navigator.clipboard
 			.writeText(shareUrl)
 			.then(() => {
-				alert('Shareable link copied to clipboard!');
+				toast.success('Shareable link copied to clipboard!');
 			})
 			.catch(() => {
-				alert('Failed to copy link');
+				toast.error('Failed to copy link');
 			});
 	};
 
 	const handleDownload = () => {
-		if (!mindMapData || !metadata) return;
+		if (!graphData) return;
 
-		const dataStr = JSON.stringify(mindMapData, null, 2);
+		const dataStr = JSON.stringify(graphData, null, 2);
 		const dataUri =
 			'data:application/json;charset=utf-8,' + encodeURIComponent(dataStr);
 
-		const exportFileDefaultName = `${metadata.title.replace(/[^a-z0-9]/gi, '_').toLowerCase()}_mindmap.json`;
+		// Use the actual file name or fallback to a generic name
+		const baseFileName = fileName?.replace(/\.[^/.]+$/, '') || 'mindmap'; // Remove file extension if present
+		const exportFileDefaultName = `${baseFileName}_${graphId}.json`;
 
 		const linkElement = document.createElement('a');
 		linkElement.setAttribute('href', dataUri);
@@ -272,7 +198,7 @@ export default function GraphPage() {
 		);
 	}
 
-	if (!mindMapData || !metadata) {
+	if (!graphData) {
 		return null;
 	}
 
@@ -283,7 +209,7 @@ export default function GraphPage() {
 
 			{/* Main Content */}
 			<div className="relative z-10 min-h-screen bg-gradient-to-br from-emerald-50/80 via-green-50/80 to-teal-100/80">
-				<div className="container mx-auto px-4 py-6">
+				<div className="container mx-auto px-4 py-4 lg:py-6">
 					{/* Breadcrumb Navigation */}
 					<motion.div
 						initial={{ opacity: 0, y: -10 }}
@@ -304,7 +230,7 @@ export default function GraphPage() {
 								<BreadcrumbItem>
 									<BreadcrumbPage className="flex items-center">
 										<Brain className="w-4 h-4 mr-1" />
-										{metadata?.title || 'Mind Map'}
+										{fileName || 'Mind Map'}
 									</BreadcrumbPage>
 								</BreadcrumbItem>
 							</BreadcrumbList>
@@ -338,35 +264,36 @@ export default function GraphPage() {
 					>
 						<Card className="shadow-lg">
 							<CardContent className="p-6">
-								<div className="flex items-center justify-between">
-									<div>
-										<h1 className="text-2xl font-bold text-gray-900 flex items-center">
-											{metadata.title}
+								<div className="flex flex-col space-y-4 lg:flex-row lg:space-y-0 lg:items-center lg:justify-between">
+									<div className="flex-1">
+										<h1 className="text-xl lg:text-2xl font-bold text-gray-900 flex items-center">
+											{fileName || 'Mind Map'}
 										</h1>
-										<div className="flex items-center space-x-4 text-sm text-gray-600 mt-1">
+										<div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-sm text-gray-600 mt-1">
 											<div className="flex items-center">
 												<Clock className="w-4 h-4 mr-1" />
 												Created{' '}
-												{new Date(metadata.createdAt).toLocaleDateString()}
+												{createdAt
+													? new Date(createdAt).toLocaleDateString()
+													: 'Unknown date'}
 											</div>
 											<div className="flex items-center">
 												<Eye className="w-4 h-4 mr-1" />
-												{metadata.views} views
+												{viewCount} {viewCount === 1 ? 'view' : 'views'}
 											</div>
-											{metadata.isPublic && (
-												<div className="flex items-center">
-													<Users className="w-4 h-4 mr-1" />
-													Public
-												</div>
-											)}
+											<div className="flex items-center">
+												<Users className="w-4 h-4 mr-1" />
+												Public
+											</div>
 										</div>
 									</div>
 
-									<div className="flex items-center space-x-3">
+									<div className="flex flex-wrap items-center gap-2 lg:gap-3">
 										<Button
 											variant="outline"
 											onClick={handleShare}
-											className="cursor-pointer"
+											className="cursor-pointer flex-1 sm:flex-none"
+											size="sm"
 										>
 											<Share2 className="w-4 h-4 mr-2" />
 											Share
@@ -374,7 +301,8 @@ export default function GraphPage() {
 										<Button
 											variant="outline"
 											onClick={handleDownload}
-											className="cursor-pointer"
+											className="cursor-pointer flex-1 sm:flex-none"
+											size="sm"
 										>
 											<Download className="w-4 h-4 mr-2" />
 											Download
@@ -382,7 +310,8 @@ export default function GraphPage() {
 										<Button
 											variant="outline"
 											onClick={handleEdit}
-											className="cursor-pointer"
+											className="cursor-pointer flex-1 sm:flex-none"
+											size="sm"
 										>
 											<Edit className="w-4 h-4 mr-2" />
 											Edit
@@ -400,7 +329,7 @@ export default function GraphPage() {
 					>
 						<Card className="shadow-2xl border-0 overflow-hidden">
 							<CardContent className="p-0">
-								<div className="bg-gradient-to-r from-emerald-600 via-green-600 to-teal-600 p-6 text-white relative">
+								<div className="bg-gradient-to-r from-emerald-600 via-green-600 to-teal-600 p-4 lg:p-6 text-white relative">
 									{/* Background pattern */}
 									<div className="absolute inset-0 bg-gradient-to-r from-emerald-600/90 via-green-600/90 to-teal-600/90"></div>
 									<div className="absolute inset-0 opacity-30">
@@ -414,38 +343,69 @@ export default function GraphPage() {
 										></div>
 									</div>
 
-									<div className="relative z-10 flex items-center justify-between">
+									<div className="relative z-10 flex flex-col space-y-4 lg:space-y-0 lg:flex-row lg:items-center lg:justify-between">
 										<div>
-											<h2 className="text-2xl font-bold mb-2">
-												{metadata.title} Mind Map
+											<h2 className="text-xl lg:text-2xl font-bold mb-2">
+												{fileName || 'Mind Map'}
 											</h2>
 											<p className="text-emerald-100 text-sm">
 												Explore the interconnected knowledge graph
 											</p>
 										</div>
-										<div className="text-right">
-											<div className="text-lg font-semibold">
-												{mindMapData.nodes.length} nodes
+										<div className="text-left lg:text-right">
+											<div className="text-base lg:text-lg font-semibold">
+												{graphData.nodes.length} nodes
 											</div>
 											<div className="text-sm opacity-90">
-												{mindMapData.relationships.length} connections
+												{graphData.relationships.length} connections
 											</div>
 										</div>
 									</div>
 								</div>
 
-								<div className="p-8 bg-gradient-to-br from-gray-50 to-white min-h-[600px] flex items-center justify-center">
+								<div className="p-4 lg:p-8 bg-gradient-to-br from-gray-50 to-white min-h-[400px] lg:min-h-[700px] xl:min-h-[800px] flex items-center justify-center">
 									<div className="w-full flex justify-center">
 										<MindMap
-											data={mindMapData}
+											data={graphData}
 											width={
 												typeof window !== 'undefined'
-													? Math.min(window.innerWidth - 180, 1400)
+													? (() => {
+															const screenWidth = window.innerWidth;
+															if (screenWidth < 768) {
+																// Mobile: smaller padding
+																return Math.min(screenWidth - 32, 600);
+															} else if (screenWidth < 1024) {
+																// Tablet: medium size
+																return Math.min(screenWidth - 100, 900);
+															} else if (screenWidth < 1536) {
+																// Desktop: larger size
+																return Math.min(screenWidth - 120, 1200);
+															} else {
+																// Large desktop: much larger
+																return Math.min(screenWidth - 150, 1600);
+															}
+														})()
 													: 1000
 											}
 											height={
 												typeof window !== 'undefined'
-													? Math.max(700, window.innerHeight - 250)
+													? (() => {
+															const screenWidth = window.innerWidth;
+															const screenHeight = window.innerHeight;
+															if (screenWidth < 768) {
+																// Mobile: compact height
+																return Math.max(400, screenHeight - 400);
+															} else if (screenWidth < 1024) {
+																// Tablet: medium height
+																return Math.max(600, screenHeight - 300);
+															} else if (screenWidth < 1536) {
+																// Desktop: larger height
+																return Math.max(700, screenHeight - 250);
+															} else {
+																// Large desktop: much larger height
+																return Math.max(800, screenHeight - 200);
+															}
+														})()
 													: 700
 											}
 											className="border-2 border-gray-200 rounded-xl shadow-lg bg-white"
@@ -464,18 +424,18 @@ export default function GraphPage() {
 					>
 						<Card className="shadow-xl border-0 overflow-hidden">
 							<CardContent className="p-0">
-								<div className="bg-gradient-to-r from-gray-900 to-gray-800 p-6 text-white">
-									<h3 className="text-xl font-bold text-white mb-2">
+								<div className="bg-gradient-to-r from-gray-900 to-gray-800 p-4 lg:p-6 text-white">
+									<h3 className="text-lg lg:text-xl font-bold text-white mb-2">
 										Graph Analytics
 									</h3>
 									<p className="text-gray-300 text-sm">
 										Detailed insights into your knowledge graph structure
 									</p>
 								</div>
-								<div className="p-6 bg-gradient-to-br from-white to-gray-50">
-									<div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+								<div className="p-4 lg:p-6 bg-gradient-to-br from-white to-gray-50">
+									<div className="grid grid-cols-1 sm:grid-cols-2 gap-4 lg:gap-6">
 										<motion.div
-											className="text-center p-6 bg-white rounded-xl shadow-md border border-emerald-100 hover:shadow-lg transition-all duration-300"
+											className="text-center p-4 lg:p-6 bg-white rounded-xl shadow-md border border-emerald-100 hover:shadow-lg transition-all duration-300"
 											whileHover={{ scale: 1.05 }}
 										>
 											<div className="w-12 h-12 bg-gradient-to-r from-emerald-500 to-emerald-600 rounded-lg flex items-center justify-center mx-auto mb-3">
@@ -493,8 +453,8 @@ export default function GraphPage() {
 													/>
 												</svg>
 											</div>
-											<div className="text-3xl font-bold text-emerald-600 mb-1">
-												{mindMapData.nodes.length}
+											<div className="text-2xl lg:text-3xl font-bold text-emerald-600 mb-1">
+												{graphData.nodes.length}
 											</div>
 											<div className="text-sm font-medium text-gray-600">
 												Total Nodes
@@ -505,7 +465,7 @@ export default function GraphPage() {
 										</motion.div>
 
 										<motion.div
-											className="text-center p-6 bg-white rounded-xl shadow-md border border-green-100 hover:shadow-lg transition-all duration-300"
+											className="text-center p-4 lg:p-6 bg-white rounded-xl shadow-md border border-green-100 hover:shadow-lg transition-all duration-300"
 											whileHover={{ scale: 1.05 }}
 										>
 											<div className="w-12 h-12 bg-gradient-to-r from-green-500 to-green-600 rounded-lg flex items-center justify-center mx-auto mb-3">
@@ -520,46 +480,14 @@ export default function GraphPage() {
 													/>
 												</svg>
 											</div>
-											<div className="text-3xl font-bold text-green-600 mb-1">
-												{mindMapData.relationships.length}
+											<div className="text-2xl lg:text-3xl font-bold text-green-600 mb-1">
+												{graphData.relationships.length}
 											</div>
 											<div className="text-sm font-medium text-gray-600">
 												Relationships
 											</div>
 											<div className="text-xs text-gray-500 mt-1">
 												Connections made
-											</div>
-										</motion.div>
-
-										<motion.div
-											className="text-center p-6 bg-white rounded-xl shadow-md border border-blue-100 hover:shadow-lg transition-all duration-300"
-											whileHover={{ scale: 1.05 }}
-										>
-											<div className="w-12 h-12 bg-gradient-to-r from-teal-500 to-teal-600 rounded-lg flex items-center justify-center mx-auto mb-3">
-												<svg
-													className="w-6 h-6 text-white"
-													fill="currentColor"
-													viewBox="0 0 20 20"
-												>
-													<rect
-														x="3"
-														y="3"
-														width="14"
-														height="14"
-														rx="2"
-														fill="currentColor"
-														opacity="0.8"
-													/>
-												</svg>
-											</div>
-											<div className="text-3xl font-bold text-teal-600 mb-1">
-												{mindMapData.chunks_processed || 0}
-											</div>
-											<div className="text-sm font-medium text-gray-600">
-												Chunks Processed
-											</div>
-											<div className="text-xs text-gray-500 mt-1">
-												Text segments analyzed
 											</div>
 										</motion.div>
 									</div>

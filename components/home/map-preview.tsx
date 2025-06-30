@@ -5,41 +5,33 @@ import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { ArrowLeft, Share2, Download, Edit, ExternalLink } from 'lucide-react';
-import { GeneratedMindMap, MindMapData } from '../../types/mindmap';
+import { MindMapData } from '../../types/mindmap';
 import { MindMap } from './mindmap/mindmap';
 import { sampleData } from '@/constants';
 import { useRouter } from 'next/navigation';
 
 interface MindMapPreviewProps {
-	generatedMindMap: GeneratedMindMap;
+	fileId: string | null;
 	mindMapData: MindMapData | null;
+	fileName?: string;
 	onStartOver: () => void;
 	onShare: () => void;
 }
 
 export const MindMapPreview: React.FC<MindMapPreviewProps> = ({
-	generatedMindMap,
+	fileId,
 	mindMapData,
+	fileName,
 	onStartOver,
 	onShare,
 }) => {
 	const router = useRouter();
 
 	const handleOpenGraph = () => {
-		// Save mind map data to localStorage before navigating
-		if (mindMapData) {
-			const storageKey = `mindmap_${generatedMindMap.id}`;
-			const dataToStore = {
-				mindMapData,
-				title: generatedMindMap.title,
-				createdAt: generatedMindMap.createdAt.toISOString(),
-				views: 0,
-				isPublic: false,
-			};
-			localStorage.setItem(storageKey, JSON.stringify(dataToStore));
+		// Navigate to the graph page with file ID
+		if (fileId) {
+			router.push(`/graph/${fileId}`);
 		}
-
-		router.push(`/graph/${generatedMindMap.id}`);
 	};
 
 	return (
@@ -58,8 +50,8 @@ export const MindMapPreview: React.FC<MindMapPreviewProps> = ({
 									Your Mind Map is Ready!
 								</h2>
 								<p className="text-emerald-100">
-									{generatedMindMap.title} • Created{' '}
-									{generatedMindMap.createdAt.toLocaleTimeString()} •{' '}
+									{fileName || 'Document'} • Created{' '}
+									{new Date().toLocaleTimeString()} •{' '}
 									{mindMapData?.chunks_processed} chunks processed
 								</p>
 							</div>

@@ -6,14 +6,15 @@ import { animations } from '@/constants';
 import { UploadContent } from './uploader';
 import { ProcessingContent } from './processing';
 import { SuccessContent } from './success';
-import { GeneratingContent } from './generator';
 import { ErrorMessage } from './error';
 
 interface FileUploadCardProps {
 	isDragOver: boolean;
 	uploadedFile: File | null;
+	selectedFile: File | null; // New: selected file before upload
 	isProcessing: boolean;
-	isGenerating: boolean;
+	processingStatus: 'idle' | 'uploading' | 'processing' | 'completed' | 'error';
+	uploadProgress: number;
 	error: string | null;
 	acceptedTypesString: string;
 	supportedTypesDisplay: string;
@@ -26,15 +27,16 @@ interface FileUploadCardProps {
 	onBrowseClick: () => void;
 	onRemoveFile: () => void;
 	onGenerateMindMap: () => void;
-	// Fix: Accept the correct ref type that matches useRef<HTMLInputElement>(null)
 	fileInputRef: React.RefObject<HTMLInputElement | null>;
 }
 
 export const FileUploadCard: React.FC<FileUploadCardProps> = ({
 	isDragOver,
 	uploadedFile,
+	selectedFile,
 	isProcessing,
-	isGenerating,
+	processingStatus,
+	uploadProgress,
 	error,
 	acceptedTypesString,
 	supportedTypesDisplay,
@@ -73,27 +75,69 @@ export const FileUploadCard: React.FC<FileUploadCardProps> = ({
 						/>
 
 						<AnimatePresence mode="wait">
-							{!uploadedFile && !isProcessing && (
-								<UploadContent
-									isDragOver={isDragOver}
-									supportedTypesDisplay={supportedTypesDisplay}
-									maxSizeInMB={maxSizeInMB}
-									onBrowseClick={onBrowseClick}
-								/>
+							{/* Step 1: File Selection (before upload) */}
+							{!selectedFile &&
+								!uploadedFile &&
+								!isProcessing &&
+								processingStatus === 'idle' && (
+									<UploadContent
+										isDragOver={isDragOver}
+										supportedTypesDisplay={supportedTypesDisplay}
+										maxSizeInMB={maxSizeInMB}
+										onBrowseClick={onBrowseClick}
+									/>
+								)}
+
+							{/* Step 2: File Selected, ready to upload */}
+							{selectedFile && !isProcessing && processingStatus === 'idle' && (
+								<div className="space-y-6">
+									<div className="text-center">
+										<div className="text-emerald-600 text-5xl mb-4">📄</div>
+										<h3 className="text-xl font-semibold mb-2">
+											File Ready to Upload
+										</h3>
+										<p className="text-gray-600 mb-4">
+											{selectedFile.name} ({formatFileSize(selectedFile.size)})
+										</p>
+										<div className="space-y-3">
+											<button
+												onClick={onGenerateMindMap}
+												className="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-semibold py-3 px-6 rounded-lg transition-colors duration-200 text-lg"
+											>
+												🚀 Upload & Generate Mind Map
+											</button>
+											<button
+												onClick={onRemoveFile}
+												className="w-full bg-gray-200 hover:bg-gray-300 text-gray-700 font-medium py-2 px-6 rounded-lg transition-colors duration-200"
+											>
+												Choose Different File
+											</button>
+										</div>
+									</div>
+								</div>
 							)}
 
-							{isProcessing && <ProcessingContent />}
+							{/* Step 3: Processing (uploading/processing) */}
+							{isProcessing &&
+								(processingStatus === 'uploading' ||
+									processingStatus === 'processing') && (
+									<ProcessingContent
+										processingStatus={processingStatus}
+										uploadProgress={uploadProgress}
+									/>
+								)}
 
-							{uploadedFile && !isProcessing && !isGenerating && (
-								<SuccessContent
-									uploadedFile={uploadedFile}
-									formatFileSize={formatFileSize}
-									onRemoveFile={onRemoveFile}
-									onGenerateMindMap={onGenerateMindMap}
-								/>
-							)}
-
-							{isGenerating && <GeneratingContent />}
+							{/* Step 4: Success */}
+							{uploadedFile &&
+								!isProcessing &&
+								processingStatus === 'completed' && (
+									<SuccessContent
+										uploadedFile={uploadedFile}
+										formatFileSize={formatFileSize}
+										onRemoveFile={onRemoveFile}
+										onGenerateMindMap={onGenerateMindMap}
+									/>
+								)}
 						</AnimatePresence>
 
 						<ErrorMessage error={error} />
