@@ -33,11 +33,36 @@ export const useSharedGraph = (shareId?: string) => {
 		}));
 
 		try {
+			// First, check if we have this graph stored locally (sessionStorage or localStorage)
+			let localGraphData = sessionStorage.getItem(`graph_${id}`);
+			if (!localGraphData) {
+				localGraphData = localStorage.getItem(`graph_${id}`);
+			}
+
+			if (localGraphData) {
+				try {
+					const parsedData = JSON.parse(localGraphData);
+					setState(prev => ({
+						...prev,
+						isLoading: false,
+						graphData: parsedData.graph_data,
+						fileId: parsedData.file_id,
+						fileName: parsedData.file_name,
+						createdAt: parsedData.created_at,
+						viewCount: parsedData.view_count || 0,
+					}));
+					return;
+				} catch (parseError) {
+					console.warn('Failed to parse local graph data:', parseError);
+					// Continue to try backend
+				}
+			}
+
 			// Smart detection: UUID format suggests it's likely a file ID, not a share ID
 			const isLikelyFileId =
 				/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(
 					id
-				);
+				) || /^\d{13}-/.test(id); // Also match timestamp-based IDs
 
 			if (isLikelyFileId) {
 				// Try direct file access first for UUID-formatted IDs

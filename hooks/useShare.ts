@@ -1,7 +1,6 @@
 'use client';
 import { useState, useCallback } from 'react';
 import { MindMapData, ShareState } from '../types/mindmap';
-import { mindmapApi } from '../lib/api/llm';
 
 interface ExtendedShareState extends ShareState {
 	isGenerating: boolean;
@@ -32,26 +31,53 @@ export const useShare = () => {
 			}));
 
 			try {
-				const shareResponse = await mindmapApi.generateShareLink(
-					fileId,
-					graphData
-				);
+				// For now, generate a simple share URL using the current domain and fileId
+				// This works with the existing graph page that accepts fileId
+				const currentUrl = window.location.origin;
+				const shareUrl = `${currentUrl}/graph/${fileId}`;
+
+				// Store the graph data locally for this session
+				// Use localStorage for text-based maps and sessionStorage for file uploads
+				const storageKey = `graph_${fileId}`;
+				const isTextBased = fileId.startsWith('text-');
+
+				const localGraphData = {
+					graph_data: graphData,
+					file_id: fileId,
+					file_name:
+						graphData.nodes?.[0]?.properties?.name ||
+						(isTextBased ? 'Text Mind Map' : 'Untitled Mind Map'),
+					created_at: new Date().toISOString(),
+					view_count: 0,
+				};
+
+				if (isTextBased) {
+					// For text-based maps, use localStorage for persistence
+					localStorage.setItem(storageKey, JSON.stringify(localGraphData));
+				} else {
+					// For file uploads, use sessionStorage
+					sessionStorage.setItem(storageKey, JSON.stringify(localGraphData));
+				}
 
 				setShareState(prev => ({
 					...prev,
 					isGenerating: false,
-					shareId: shareResponse.share_id,
-					shareUrl: shareResponse.share_url,
-					shortUrl: shareResponse.share_url,
-					expiresAt: shareResponse.expires_at,
+					shareId: fileId, // Use fileId as shareId for now
+					shareUrl: shareUrl,
+					shortUrl: shareUrl,
+					expiresAt: Date.now() + 24 * 60 * 60 * 1000, // 24 hours from now
 				}));
 
-				return shareResponse.share_url;
+				return shareUrl;
 			} catch (error) {
-				const errorMessage =
-					error instanceof Error
-						? error.message
-						: 'Failed to generate share link';
+				console.error('❌ Share link generation failed:', error);
+
+				let errorMessage = 'Failed to generate share link';
+
+				if (error instanceof Error) {
+					errorMessage = error.message;
+				}
+
 				setShareState(prev => ({
 					...prev,
 					isGenerating: false,

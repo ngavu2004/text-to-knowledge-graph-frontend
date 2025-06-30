@@ -31,6 +31,47 @@ export const mindmapApi = {
 		}
 	},
 
+	// Generate mind map from text input
+	generateFromText: async (text: string): Promise<MindMapData> => {
+		try {
+			const response = await api.post('/get_knowledge_graph', {
+				text: text,
+			});
+
+			if (!response.data) {
+				throw new Error('No data received from text processing endpoint');
+			}
+
+			// Transform backend response to MindMapData format
+			const mindMapData: MindMapData = {
+				nodes: response.data.nodes || [],
+				relationships: response.data.relationships || [],
+				chunks_processed: 1, // Text input counts as 1 chunk
+			};
+
+			return mindMapData;
+		} catch (error: unknown) {
+			console.error('❌ Failed to generate mind map from text:', error);
+
+			if (error && typeof error === 'object' && 'response' in error) {
+				const axiosError = error as {
+					response?: { status?: number; data?: { detail?: string } };
+				};
+
+				if (axiosError.response?.data?.detail) {
+					throw new Error(axiosError.response.data.detail);
+				}
+			}
+
+			if (error instanceof Error) {
+				throw new Error(
+					error.message || 'Failed to generate mind map from text'
+				);
+			}
+			throw new Error('An unexpected error occurred while processing text');
+		}
+	},
+
 	getPresignedUrl: async (
 		fileName: string,
 		contentType: string

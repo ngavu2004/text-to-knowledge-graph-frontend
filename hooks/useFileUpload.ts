@@ -103,6 +103,7 @@ export const useFileUpload = () => {
 		[validateFile]
 	);
 
+	// Simplified upload that works with current backend
 	// Step 2: Upload to S3 and process using individual API methods
 	const uploadAndProcessFile = useCallback(async () => {
 		if (!state.selectedFile) {
@@ -191,10 +192,6 @@ export const useFileUpload = () => {
 				const currentInterval = Math.min(
 					baseInterval + attempts * 2000, // Increase by 2s each attempt
 					maxInterval
-				);
-
-				console.log(
-					`📊 Polling attempt ${attempts + 1}/${maxAttempts} (next check in ${currentInterval / 1000}s)...`
 				);
 
 				// Smooth progress calculation - more responsive early, slower later
