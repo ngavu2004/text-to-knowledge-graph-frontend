@@ -54,7 +54,7 @@ export const useTextInput = () => {
 			const mindMapData = await mindmapApi.generateFromText(state.text);
 
 			// Generate a unique ID for this text-based mind map
-			const textId = `text-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+			const textId = `text-${Date.now()}-${Math.random().toString(36).slice(2, 11)}`;
 
 			// Store the mind map data in localStorage for sharing
 			const localGraphData = {
